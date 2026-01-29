@@ -1,0 +1,61 @@
+name: ARCOS F1725 GENESIS
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  genesis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Crear Estructura Total
+        run: |
+          mkdir -p lib
+          mkdir -p android/app/src/main
+          
+          # MOTOR Y UI SINCRETIZADOS
+          cat > lib/main.dart <<'EOF'
+          import 'package:flutter/material.dart';
+          import 'dart:math' as math;
+          void main() => runApp(MaterialApp(home: Scaffold(backgroundColor: Colors.black, body: Center(child: Text("ARCOS F1725 VIVA", style: TextStyle(color: Colors.cyanAccent))))));
+          EOF
+
+          # MANIFIESTO DE PERMISOS (VOZ/CAMARA)
+          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com">
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+              <queries><intent><action android:name="android.speech.RecognitionService" /></intent></queries>
+              <application android:label="KLARIXA F1725"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application>
+          </manifest>
+          EOF
+
+      - name: Compilar APK Automáticamente
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+      - run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: Entregar KLARIXA VIVA
+        uses: actions/upload-artifact@v4
+        with:
+          name: KLARIXA-F1725-FINAL
+          path: build/app/outputs/flutter-apk/*.apk
+
+      - name: Commit de Estructura
+        run: |
+          git config --global user.name "ARCOS-GENESIS"
+          git config --global user.email "genesis@f1725.dev"
+          git add .
+          git commit -m "ARCOS F1725: Nacimiento Completo del Nodo"
+          git push
+          
